@@ -1,22 +1,40 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, vec, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol};
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Lease {
+    pub landlord: Address,
+    pub tenant: Address,
+    pub amount: i128,
+    pub active: bool,
+}
 
 #[contract]
-pub struct Contract;
+pub struct LeaseContract;
 
-// This is a sample contract. Replace this placeholder with your own contract logic.
-// A corresponding test example is available in `test.rs`.
-//
-// For comprehensive examples, visit <https://github.com/stellar/soroban-examples>.
-// The repository includes use cases for the Stellar ecosystem, such as data storage on
-// the blockchain, token swaps, liquidity pools, and more.
-//
-// Refer to the official documentation:
-// <https://developers.stellar.org/docs/build/smart-contracts/overview>.
 #[contractimpl]
-impl Contract {
-    pub fn hello(env: Env, to: String) -> Vec<String> {
-        vec![&env, String::from_str(&env, "Hello"), to]
+impl LeaseContract {
+    /// Initializes a simple lease between a landlord and a tenant.
+    pub fn create_lease(env: Env, landlord: Address, tenant: Address, amount: i128) -> Symbol {
+        let lease = Lease {
+            landlord,
+            tenant,
+            amount,
+            active: true,
+        };
+        env.storage()
+            .instance()
+            .set(&symbol_short!("lease"), &lease);
+        symbol_short!("created")
+    }
+
+    /// Returns the current lease details stored in the contract.
+    pub fn get_lease(env: Env) -> Lease {
+        env.storage()
+            .instance()
+            .get(&symbol_short!("lease"))
+            .expect("Lease not found")
     }
 }
 
